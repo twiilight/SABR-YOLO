@@ -1,0 +1,61 @@
+# Ultralytics YOLOv5 🚀, AGPL-3.0 license
+
+# Parameters
+nc: 80 # number of classes
+scales: # model compound scaling constants, i.e. 'model=yolov5n.yaml' will call yolov5.yaml with scale 'n'
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 1024]
+  l: [1.00, 1.00, 1024]
+  x: [1.33, 1.25, 1024]
+
+# YOLOv5 v6.0 backbone
+backbone:
+  # [from, number, module, args]
+  [ #                                                   channel   size
+    #                                                     3       512
+    [-1, 1, Conv, [64, 6, 1, 2]], # 0-P1/2         0      64      512
+    [-1, 1, Conv, [128, 3, 2]], # 1-P2/4           1      128     256
+    [-1, 3, C3, [128]], #                          2      128     256
+    [-1, 1, Conv, [256, 3, 2]], # 3-P3/8           3      256     128
+    [-1, 6, C3, [256]], #                          4      256     128
+    [-1, 1, Conv, [512, 3, 2]], # 5-P4/16          5      512     64
+    [-1, 9, C3, [512]], # 6                        6      512     64
+    [-1, 1, Conv, [1024, 3, 2]], # 7-P5/32         7      1024    32
+    [-1, 3, C3, [1024]], #                         8      1024    32
+    [-1, 1, SPPF, [1024, 5]], # 9                  9      1024    32
+
+    [-1, 1, CreatMask, [256]], #                   10     1       32
+    [-1, 1, SelectConv, []], #                     11     1       32
+    [-2, 1, SelectMask, []], #                     12     1       256  mask with size of 256
+    [-1, 1, nn.AvgPool2d, [2]], #                  13     1       128
+    [-1, 1, mask01, []],   #                       14     1       128  mask with size of 128
+    [-1, 1, nn.AvgPool2d, [2]], #                  15     1       64
+    [-1, 1, mask01, []],   #                       16     1       64   mask with size of 64
+    [-1, 1, nn.AvgPool2d, [2]], #                   17     1       32
+    [-1, 1, mask01, []],   #                       18     1       32   mask with size of 32
+  ]
+
+# YOLOv5 v6.0 head
+head: [
+    [9, 1, Conv, [512, 1, 1]], #                   19     512     32
+    [-1, 1, nn.Upsample, [None, 2, "nearest"]], #  20     512     64
+    [[-1, 6], 1, Concat, [1]], # cat backbone P4   21     1024    64
+    [[-1, 16], 1, SkipC3, [64, False]], #         22     512     64
+
+    [-1, 1, Conv, [256, 1, 1]], #                  23     256     64
+    [-1, 1, nn.Upsample, [None, 2, "nearest"]], #  24     256     128
+    [[-1, 4], 1, Concat, [1]], # cat backbone P3   25     512     128
+    [[-1, 14], 1, SkipC3, [32, False]], #( small) 26     256     128 --
+
+    [-1, 1, Conv, [256, 3, 2]], #                  27     256     64
+    [[-1, 23], 1, Concat, [1]], # cat head P4      28     512     64
+    [[-1, 16], 1, SkipC3, [64, False]], #(medium) 29     512     64 --
+
+    [-1, 1, Conv, [512, 3, 2]], #                  30     512     32
+    [[-1, 19], 1, Concat, [1]], # cat head P5      31     1024    32
+    [[-1, 18], 1, SkipC3, [128, False]], #(large) 32     1024    32 --
+
+    [[26, 29, 32, 11], 1, Detect, [nc]], # Detect(P3, P4, P5)
+  ]

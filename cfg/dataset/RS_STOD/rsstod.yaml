@@ -1,0 +1,16 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: D:\qzx\PycharmProject\yolov5-tower\cfg\dataset\RS_STOD  # dataset root dir
+train: train_new.txt  # train images (relative to 'path') 118287 images
+val: val_new.txt  # val images (relative to 'path') 5000 images
+test: test_new.txt  # 20288 of 40670 images, submit to https://competitions.codalab.org/competitions/20794
+
+# Classes
+names:
+  0: Small Vehicle
+  1: Large Vehicle
+  2: Ship
+  3: Airplane
+  4: Storage Tank
